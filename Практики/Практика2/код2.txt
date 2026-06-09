@@ -1,0 +1,50 @@
+#include <8051.h>
+
+void main()
+{
+    unsigned char j;
+    unsigned char n;
+    unsigned char last;
+    unsigned char running;
+
+    P2 = 0xC0;
+    last = 1;
+    running = 0;
+
+    while(1)
+    {
+        if(running == 1)
+        {
+            for(j = 0; j < 200; j++)
+            {
+            }
+
+            n = P2;
+
+            if(n == 0xC0) P2 = 0xB0;
+            else if(n == 0xB0) P2 = 0x82;
+            else if(n == 0x82) P2 = 0x90;
+            else P2 = 0xC0;
+        }
+
+        if(last == 1 && (P3 & 0x02) == 0)
+        {
+            for(j = 0; j < 100; j++)
+            {
+            }
+            if((P3 & 0x02) == 0)
+            {
+                if(running == 1)
+                {
+                    running = 0;
+                }
+                else
+                {
+                    running = 1;
+                }
+            }
+        }
+
+        last = P3 & 0x02;
+    }
+}

@@ -1,0 +1,117 @@
+$MOD51
+
+ORG 0000H
+    LJMP START
+
+ORG 0030H
+
+START:
+    MOV TMOD, #00010010B
+    MOV TH0, #0F4H
+    MOV TL0, #0F4H
+    MOV P1, #00H
+
+MAIN:
+    MOV P1, #64
+
+    MOV P1, #60
+    LCALL DELAY_10us
+    MOV P1, #56
+    LCALL DELAY_10us
+    MOV P1, #52
+    LCALL DELAY_10us
+    MOV P1, #48
+    LCALL DELAY_10us
+    MOV P1, #44
+    LCALL DELAY_10us
+    MOV P1, #40
+    LCALL DELAY_10us
+    MOV P1, #36
+    LCALL DELAY_10us
+    MOV P1, #32
+    LCALL DELAY_10us
+    MOV P1, #28
+    LCALL DELAY_10us
+    MOV P1, #24
+    LCALL DELAY_10us
+    MOV P1, #20
+    LCALL DELAY_10us
+    MOV P1, #16
+    LCALL DELAY_10us
+    MOV P1, #12
+    LCALL DELAY_10us
+    MOV P1, #8
+    LCALL DELAY_10us
+    MOV P1, #4
+    LCALL DELAY_10us
+
+    MOV P1, #255
+
+    MOV P1, #246
+    LCALL DELAY_10us
+    MOV P1, #237
+    LCALL DELAY_10us
+    MOV P1, #228
+    LCALL DELAY_10us
+    MOV P1, #219
+    LCALL DELAY_10us
+    MOV P1, #210
+    LCALL DELAY_10us
+    MOV P1, #201
+    LCALL DELAY_10us
+    MOV P1, #192
+    LCALL DELAY_10us
+    MOV P1, #183
+    LCALL DELAY_10us
+    MOV P1, #174
+    LCALL DELAY_10us
+    MOV P1, #165
+    LCALL DELAY_10us
+    MOV P1, #156
+    LCALL DELAY_10us
+    MOV P1, #147
+    LCALL DELAY_10us
+    MOV P1, #138
+    LCALL DELAY_10us
+    MOV P1, #129
+    LCALL DELAY_10us
+
+    MOV P1, #64
+
+    LCALL DELAY_T1_250
+
+    MOV P1, #0
+
+    LCALL DELAY_T1_500
+
+    LJMP MAIN
+
+DELAY_10us:
+    SETB TR0
+WAIT_10us:
+    JNB TF0, WAIT_10us
+    CLR TF0
+    CLR TR0
+    RET
+
+DELAY_T1_250:
+    MOV TH1, #0FFH
+    MOV TL1, #006H
+    SETB TR1
+WAIT_T1_250:
+    JNB TF1, WAIT_T1_250
+    CLR TF1
+    CLR TR1
+    RET
+
+DELAY_T1_500:
+    MOV TH1, #0FEH
+    MOV TL1, #00CH
+    SETB TR1
+WAIT_T1_500:
+    JNB TF1, WAIT_T1_500
+    CLR TF1
+    CLR TR1
+    RET
+
+END

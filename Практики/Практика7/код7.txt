@@ -1,0 +1,198 @@
+$MOD52
+
+                ORG     0000H
+                LJMP    START
+
+                ORG     0003H
+                LJMP    EXT_INT0_ISR
+
+                ORG     000BH
+                LJMP    TIMER0_ISR
+
+                ORG     0013H
+                LJMP    EXT_INT1_ISR
+
+                ORG     001BH
+                LJMP    TIMER1_ISR
+
+                ORG     0100H
+
+DUTY            EQU     30H
+HIGH_TIME_L     EQU     31H
+HIGH_TIME_H     EQU     32H
+
+; ============================================
+; F = 12 ???, T = 0,05 ? = 50 ?? = 50000 ???
+; ??????: 65536 - 50000 = 15536 = 0x3CB0
+; Q??? = 45%, Q???? = 75%, ??? 5%
+; HIGH_TIME = t_high ? ??? (?????????? ?? 0)
+; ============================================
+
+PERIOD_H        EQU     3CH
+PERIOD_L        EQU     0B0H
+
+START:
+                MOV     SP, #07H
+                MOV     P1, #0FFH
+                CLR     P1.0
+                
+                MOV     DUTY, #75
+                LCALL   SET_HIGH_TIME
+                
+                MOV     TMOD, #11H
+
+                MOV     TH1, #PERIOD_H
+                MOV     TL1, #PERIOD_L
+                
+                SETB    IT0
+                SETB    IT1
+                SETB    EX0
+                SETB    EX1
+                SETB    EA
+                
+                SETB    ET0
+                SETB    ET1
+                
+                CLR     ET1
+                CLR     TF0
+                CLR     TF1
+                SETB    P1.0
+                CLR     TR0
+                CLR     C
+                MOV     A, #00H
+                SUBB    A, HIGH_TIME_L
+                MOV     TL0, A
+                MOV     A, #00H
+                SUBB    A, HIGH_TIME_H
+                MOV     TH0, A
+                SETB    TR0
+                SETB    ET1
+                SETB    TR1
+                
+MAIN:
+                SJMP    MAIN
+
+SET_HIGH_TIME:
+                MOV     A, DUTY
+                CJNE    A, #45, C50
+                ; 45%: 22500 ??? = 0x57E4
+                MOV     HIGH_TIME_H, #57H
+                MOV     HIGH_TIME_L, #0E4H
+                RET
+C50:            CJNE    A, #50, C55
+                ; 50%: 25000 ??? = 0x61A8
+                MOV     HIGH_TIME_H, #61H
+                MOV     HIGH_TIME_L, #0A8H
+                RET
+C55:            CJNE    A, #55, C60
+                ; 55%: 27500 ??? = 0x6B6C
+                MOV     HIGH_TIME_H, #6BH
+                MOV     HIGH_TIME_L, #6CH
+                RET
+C60:            CJNE    A, #60, C65
+                ; 60%: 30000 ??? = 0x7530
+                MOV     HIGH_TIME_H, #75H
+                MOV     HIGH_TIME_L, #30H
+                RET
+C65:            CJNE    A, #65, C70
+                ; 65%: 32500 ??? = 0x7EF4
+                MOV     HIGH_TIME_H, #7EH
+                MOV     HIGH_TIME_L, #0F4H
+                RET
+C70:            CJNE    A, #70, C75
+                ; 70%: 35000 ??? = 0x88B8
+                MOV     HIGH_TIME_H, #88H
+                MOV     HIGH_TIME_L, #0B8H
+                RET
+C75:            CJNE    A, #75, DEF
+                ; 75%: 37500 ??? = 0x927C
+                MOV     HIGH_TIME_H, #92H
+                MOV     HIGH_TIME_L, #7CH
+                RET
+DEF:
+                MOV     HIGH_TIME_H, #57H
+                MOV     HIGH_TIME_L, #0E4H
+                RET
+
+EXT_INT0_ISR:
+                PUSH    ACC
+                PUSH    PSW
+                PUSH    6
+                PUSH    7
+                
+                CLR     EX0
+                MOV     R7, #40
+DZ0_1:          MOV     R6, #10
+DZ0_2:          DJNZ    R6, DZ0_2
+                DJNZ    R7, DZ0_1
+                JB      P3.2, EXIT0
+                
+                MOV     A, DUTY
+                CJNE    A, #75, INC_DUTY
+                SJMP    EXIT0
+INC_DUTY:
+                ADD     A, #5
+                MOV     DUTY, A
+                LCALL   SET_HIGH_TIME
+                
+EXIT0:
+                SETB    EX0
+                POP     7
+                POP     6
+                POP     PSW
+                POP     ACC
+                RETI
+
+EXT_INT1_ISR:
+                PUSH    ACC
+                PUSH    PSW
+                PUSH    6
+                PUSH    7
+                
+                CLR     EX1
+                MOV     R7, #40
+DZ1_1:          MOV     R6, #10
+DZ1_2:          DJNZ    R6, DZ1_2
+                DJNZ    R7, DZ1_1
+                JB      P3.3, EXIT1
+                
+                MOV     A, DUTY
+                CJNE    A, #45, DEC_DUTY
+                SJMP    EXIT1
+
+DEC_DUTY:
+                SUBB    A, #5
+                MOV     DUTY, A
+                LCALL   SET_HIGH_TIME
+                
+EXIT1:
+                SETB    EX1
+                POP     7
+                POP     6
+                POP     PSW
+                POP     ACC
+                RETI
+
+TIMER1_ISR:
+                CLR     TF1
+                MOV     TH1, #PERIOD_H
+                MOV     TL1, #PERIOD_L
+                SETB    P1.0
+                CLR     TR0
+                CLR     C
+                MOV     A, #00H
+                SUBB    A, HIGH_TIME_L
+                MOV     TL0, A
+                MOV     A, #00H
+                SUBB    A, HIGH_TIME_H
+                MOV     TH0, A
+                SETB    TR0
+                RETI
+
+TIMER0_ISR:
+                CLR     TF0
+                CLR     P1.0
+                CLR     TR0
+                RETI
+
+END
